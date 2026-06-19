@@ -8,8 +8,9 @@ L'utilisateur saisit les valeurs RFM d'un client, l'app predit son **segment** e
 
 ## Contenu du dossier
 - `app.py` — l'application Streamlit
-- `scaler_rfm.pkl` — le StandardScaler entraine
-- `kmeans_rfm.pkl` — le modele K-Means entraine (4 segments)
+- `model_params.json` — parametres du modele (centres des clusters + normalisation),
+  exportes du notebook. La prediction est faite a la main avec numpy, ce qui rend l'app
+  portable (independante de la version de scikit-learn).
 - `rfm_segments.csv` — les clients deja segmentes (pour les graphiques)
 - `requirements.txt` — les dependances
 

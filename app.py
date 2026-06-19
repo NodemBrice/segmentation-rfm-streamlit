@@ -1,13 +1,16 @@
+import json
 import streamlit as st
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import joblib
 
-# chargement du scaler et du modele entraines dans le notebook
-scaler = joblib.load('scaler_rfm.pkl')
-kmeans = joblib.load('kmeans_rfm.pkl')
+# parametres du modele exportes depuis le notebook (scaler + centres des clusters)
+# on predit a la main pour ne dependre d'aucune version de scikit-learn (portable)
+params = json.load(open('model_params.json'))
+mean    = np.array(params['mean'])
+scale   = np.array(params['scale'])
+centers = np.array(params['centers'])
 
 # on recharge les clients deja segmentes pour les graphiques
 clients = pd.read_csv('rfm_segments.csv')
@@ -26,6 +29,16 @@ profils = {
     3: "Client regulier avec du potentiel. A pousser vers le haut de gamme."
 }
 
+
+def predire_cluster(recency, frequency, monetary):
+    # meme traitement que dans le notebook : log puis normalisation
+    x = np.log1p(np.array([recency, frequency, monetary], dtype=float))
+    x = (x - mean) / scale
+    # cluster = centre le plus proche (comme K-Means)
+    distances = np.linalg.norm(centers - x, axis=1)
+    return int(distances.argmin())
+
+
 st.title("Segmentation des clients (RFM)")
 st.write("Saisir les valeurs RFM d'un client pour predire son segment et le situer parmi les autres clients.")
 
@@ -35,10 +48,7 @@ frequency = st.number_input("Frequency (nombre de commandes)",          min_valu
 monetary  = st.number_input("Monetary (montant total depense)",         min_value=0.0, value=500.0)
 
 if st.button("Predire le segment"):
-    # meme traitement que dans le notebook : log puis normalisation
-    X = np.log1p(np.array([[recency, frequency, monetary]]))
-    X = scaler.transform(X)
-    cluster = int(kmeans.predict(X)[0])
+    cluster = predire_cluster(recency, frequency, monetary)
 
     # ----- affichage du profil client -----
     st.success("Segment : " + noms_segments[cluster])
